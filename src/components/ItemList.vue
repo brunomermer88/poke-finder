@@ -1,14 +1,11 @@
 <script setup>
+import IconDismissCircle from '@/assets/icons/dismiss-circle.svg?component'
 import { promiseTimeout, useFetch } from '@vueuse/core';
 import { onMounted } from 'vue';
 import { padZeros,removeCharacter,capitalize } from '@/helpers/filters.js';
 
-/* const items = $ref([
-  {id: 1, name: 'Poke 1'},
-  {id: 2, name: 'Poke 2'},
-  {id: 3, name: 'Poke 3'},
-  {id: 4, name: 'Poke 4'}
-]) */
+const props = defineProps({ search: String })
+const emit = defineEmits(['clear-search','item-clicked'])
 
 // Starting reactive object to handle the state of the API fetch.
 let fetchState = $ref({ isFetching: true, error: null, data: null })
@@ -30,10 +27,28 @@ const items = $computed(() => {
     id: index + 1,
     ...item
   }))
+});
+
+const filteredItems = $computed(() => {
+  return items.filter(
+    (item) => 
+    item.name.indexOf(props.search.toLowerCase()) > -1 ||
+    item.id === Number(props.search)
+  )
+})
+
+// Computed message with count of items found after a search.
+const itensFoundMessage = $computed(() => {
+  if (fetchState.isFetching || !props.search) return ''
+
+  const count = filteredItems.length
+  return `${count} item${count === 1 ? '' : 's'} found`
 })
 
 </script>
 <template>
+
+    <p>{{ itensFoundMessage }}</p>
 
     <!-- In case we have an API fetch error, show it. -->
     <div v-if="fetchState.error">
@@ -46,16 +61,41 @@ const items = $computed(() => {
       Loading...
     </div>
 
-    <ol
-      v-else
-      class="flex flex-wrap justify-center gap-6 lg:gap-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-4"
-    >
-      <li v-for="item of items" class="flex-initial flex rounded bg-white shadow h-24 w-full md:w-[calc(50%-1.5rem)] lg:w-[calc(33.33%-1.5rem)] xl:w-[calc(25%-1.5rem)]">
-        <a>
-          <small class="opacity-70 transition-colors group-hover:text-white">#{{ padZeros(item.id) }}</small>
-          <strong class="transition-colors group-hover:text-white">{{ capitalize(removeCharacter(item.name,'-')) }}</strong>
-        </a>
-      </li>
-    </ol>
+    <template v-else>
+      <div
+        v-if="props.search"
+        class="mb-8 flex gap-4 flex-wrap items-center justify-center"
+      >
+        <p class="text-gray-700">
+          Search results for <b>{{ props.search }}</b
+          >: <i>{{ itensFoundMessage }}</i
+          >.
+        </p>
+
+        <button
+          class="inline-flex gap-2 items-center h-8 px-3 rounded active:text-black/60 border border-black/5 border-b-black/40 bg-white/70 hover:bg-neutral-900/5 active:bg-neutral-700/5 active:border-black/5 outline outline-2 outline-offset-1 outline-transparent focus-visible:outline-black transition-all"
+          @click="emit('clear-search')"
+        >
+          <IconDismissCircle class="w-4 h-4" />
+          <span>Clear</span>
+        </button>
+      </div>
+
+      <ol
+        
+        class="flex flex-wrap justify-center gap-6 lg:gap-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-4"
+      >
+        <li v-for="item of filteredItems" class="flex-initial flex rounded bg-white shadow h-24 w-full md:w-[calc(50%-1.5rem)] lg:w-[calc(33.33%-1.5rem)] xl:w-[calc(25%-1.5rem)]">
+          <a
+          class="relative flex-1 flex flex-col justify-center rounded border border-white bg-white outline outline-2 outline-offset-1 outline-transparent focus-visible:outline-black hover:bg-red-600 hover:border-black/50 group transition-all"
+          @click.prevent="emit('item-clicked', item)"
+          >
+            <small class="opacity-70 transition-colors group-hover:text-white">#{{ padZeros(item.id) }}</small>
+            <strong class="transition-colors group-hover:text-white">{{ capitalize(removeCharacter(item.name,'-')) }}</strong>
+          </a>
+        </li>
+      </ol>
+
+    </template>
 
 </template>
