@@ -1,8 +1,9 @@
 <script setup>
 import IconDismissCircle from '@/assets/icons/dismiss-circle.svg?component'
-import { promiseTimeout, useFetch } from '@vueuse/core';
-import { onMounted } from 'vue';
+import { promiseTimeout, useFetch, useTitle } from '@vueuse/core';
+import { onMounted, watchEffect } from 'vue';
 import { padZeros,removeCharacter,capitalize } from '@/helpers/filters.js';
+import LikeButton from '@/components/LikeButton.vue'
 
 const props = defineProps({ search: String })
 const emit = defineEmits(['clear-search','item-clicked'])
@@ -12,7 +13,7 @@ let fetchState = $ref({ isFetching: true, error: null, data: null })
 // When the component is mounted in the DOM.
 onMounted(async () => {
   // Simulate a delay to see loading state..
-  await promiseTimeout(1000)
+  // await promiseTimeout(1000)
 
   // This API doesn't support server-side search, all records loaded.
   fetchState = await useFetch('https://pokeapi.co/api/v2/pokemon/?limit=30')
@@ -44,6 +45,11 @@ const itensFoundMessage = $computed(() => {
   const count = filteredItems.length
   return `${count} item${count === 1 ? '' : 's'} found`
 })
+
+// Watch changes to `itensFoundMessage`, to reactively update window title.
+watchEffect(() =>
+  useTitle(itensFoundMessage ? `${itensFoundMessage} - PokéDex` : 'PokéDex')
+)
 
 </script>
 <template>
@@ -79,6 +85,7 @@ const itensFoundMessage = $computed(() => {
           <IconDismissCircle class="w-4 h-4" />
           <span>Clear</span>
         </button>
+
       </div>
 
       <ol
@@ -86,12 +93,15 @@ const itensFoundMessage = $computed(() => {
         class="flex flex-wrap justify-center gap-6 lg:gap-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-4"
       >
         <li v-for="item of filteredItems" class="flex-initial flex rounded bg-white shadow h-24 w-full md:w-[calc(50%-1.5rem)] lg:w-[calc(33.33%-1.5rem)] xl:w-[calc(25%-1.5rem)]">
-          <a
+          <a :href="`#${item.id}`"
           class="relative flex-1 flex flex-col justify-center rounded border border-white bg-white outline outline-2 outline-offset-1 outline-transparent focus-visible:outline-black hover:bg-red-600 hover:border-black/50 group transition-all"
-          @click.prevent="emit('item-clicked', item)"
+          @click.prevent="emit('item-clicked', item.url)"
           >
             <small class="opacity-70 transition-colors group-hover:text-white">#{{ padZeros(item.id) }}</small>
             <strong class="transition-colors group-hover:text-white">{{ capitalize(removeCharacter(item.name,'-')) }}</strong>
+
+            <LikeButton :name="item.name" class="absolute top-1 right-1" />
+
           </a>
         </li>
       </ol>

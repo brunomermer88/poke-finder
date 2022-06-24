@@ -1,10 +1,14 @@
 <script setup>
 import IconCircleOff from '@/assets/icons/circle-off.svg?component'
 import IconDismissCircle from '@/assets/icons/dismiss-circle.svg?component'
+import IconArrowCircleLeft from '@/assets/icons/arrow-circle-left.svg?component'
 import { promiseTimeout, useFetch, useTitle } from '@vueuse/core'
 import { onMounted, watch, watchEffect } from 'vue'
 import { capitalize, padZeros, removeCharacter } from '@/helpers/filters'
 import { LOADING_DELAY } from '@/helpers/constants.js';
+import { RouterLink } from 'vue-router'
+import TypeBadge from '@/components/TypeBadge.vue'
+import LikeButton from '@/components/LikeButton.vue'
 
 const emit = defineEmits(['clear-search'])
 const props = defineProps({ url: String })
@@ -28,6 +32,16 @@ watch(
 
 // Extract `fetchState.data` as `pokemon` just to simplify use in template.
 const pokemon = $computed(() => fetchState.data)
+
+// Computed Pokémon name to use both in template and window title.
+const pokemonName = $computed(() => {
+  return capitalize(removeCharacter(pokemon?.name ?? '', '-'))
+})
+
+// Watch changes to `pokemonName`, to reactively update window title.
+watchEffect(() =>
+  useTitle(pokemonName ? `${pokemonName} - PokéDex` : 'PokéDex')
+)
 
 </script>
 <template>
@@ -53,50 +67,99 @@ const pokemon = $computed(() => fetchState.data)
     <p>Loading...</p>
     </div>
 
-    <div v-else :class="$attrs.class">
+    <template v-else>
 
-        <h2 class="inline-flex gap-3 items-center text-2xl font-bold"
-        >
-        {{ capitalize(pokemon?.name) }}
-        </h2>
+        <div>
 
-        <div class="flex flex-wrap justify-center gap-6 my-10">
+            <LikeButton v-if="!fetchState.isFetching" :name="pokemon?.name" />
 
-
-            <div class="flex gap-2">
-                <b>ID:</b>
-                <i
-                class="inline-block"
-                >{{ pokemon?.id }} 
-                </i>
-            </div>
-
-            <div class="flex gap-2">
-                <b>Height:</b>
-                <i
-                class="inline-block"
-                >{{ pokemon?.height / 10 }} 
-                </i>
-            </div>
-
-            <div class="flex gap-2">
-                <b>Weight:</b>
-                <i
-                class="inline-block"
-                >{{ pokemon?.weight }} 
-                </i>
-            </div>
-
-            <button
-                class="inline-flex gap-2 items-center h-8 px-3 rounded active:text-black/60 border border-black/5 border-b-black/40 bg-white/70 hover:bg-neutral-900/5 active:bg-neutral-700/5 active:border-black/5 outline outline-2 outline-offset-1 outline-transparent focus-visible:outline-black transition-all"
-                @click="emit('clear-search')"
+            <h2 class="inline-flex gap-3 items-center text-2xl font-bold"
             >
-            <IconDismissCircle class="w-4 h-4" />
-                <span>Clear</span>
-            </button>
+            {{ capitalize(pokemon?.name) }}
+            </h2>
+
+            <div class="flex text-center flex-wrap justify-center gap-6 my-10">
+
+
+                <div class="flex gap-2 text-center">
+                    <b>ID:</b>
+                    <i
+                    class="inline-block"
+                    >{{ pokemon?.id }} 
+                    </i>
+                </div>
+
+                <div class="flex gap-2">
+                    <b>Height:</b>
+                    <i
+                    class="inline-block"
+                    >{{ pokemon?.height / 10 }} 
+                    </i>
+                </div>
+
+                <div class="flex gap-2">
+                    <b>Weight:</b>
+                    <i
+                    class="inline-block"
+                    >{{ pokemon?.weight }} 
+                    </i>
+                </div>
+
+            </div>
 
         </div>
 
+     <div class="flex flex-wrap justify-center gap-6 my-10">
+      <h3 class="flex-auto w-full text-small text-black/60">Images</h3>
+
+      <div
+        v-for="image in [
+          'front_default',
+          'back_default',
+          'front_shiny',
+          'back_shiny'
+        ]"
+        class="flex flex-col gap-1 justify-center items-center w-36 h-36 rounded"
+        :class="{
+          'animate-pulse bg-gray-200 text-black/0': fetchState.isFetching,
+          'bg-white shadow': !fetchState.isFetching
+        }"
+      >
+        <img
+          v-if="pokemon?.sprites[image]"
+          :src="pokemon?.sprites[image]"
+          :alt="`Sprite ${removeCharacter(image, '_')}`"
+          class="w-24 h-24"
+        />
+        <IconCircleOff
+          v-else-if="!fetchState.isFetching"
+          class="w-24 h-24 p-2 text-gray-300"
+        />
+
+        <span class="block text-xs leading-none">{{
+          capitalize(removeCharacter(image, '_'))
+        }}</span>
+      </div>
     </div>
+
+    <div class="flex flex-wrap justify-center gap-2 my-10">
+      <h3 class="flex-auto w-full text-small text-black/60 mb-4">Types</h3>
+
+      <TypeBadge
+        v-for="item of pokemon?.types ?? 2"
+        :name="item.type?.name ?? ''"
+      />
+    </div>
+
+    </template>
+
+    <RouterLink
+        to="/"
+        is="button"
+        class="mt-10 inline-flex gap-2 items-center h-8 px-3 rounded active:text-black/60 border border-black/5 border-b-black/40 bg-white/70 hover:bg-neutral-900/5 active:bg-neutral-700/5 active:border-black/5 outline outline-2 outline-offset-1 outline-transparent focus-visible:outline-black transition-all"
+        >
+        <IconArrowCircleLeft class="w-4 h-4" />
+        <span>Go back</span>
+    </RouterLink>
 
 </template>

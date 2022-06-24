@@ -1,16 +1,19 @@
 <script setup>
-
+import { RouterLink } from 'vue-router'
 </script>
 
 <template>
   <header
     class="grid place-items-center bg-gradient-to-b from-red-500 to-red-600 border-b border-red-800 px-6 py-8 sm:px-12 lg:py-10"
   >
-    
+    <RouterLink
+      to="/"
+      class="rounded outline outline-2 outline-offset-4 outline-transparent focus-visible:outline-black transition-all"
+    >
       <img src="@/assets/logo.png" alt="PokéDex" class="max-w-md w-full" />
       <h1 class="font-bold font-mono text-white leading-none">
       </h1>
-    
+    </RouterLink>
   </header>
 </template>
 

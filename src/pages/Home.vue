@@ -1,35 +1,26 @@
 <script setup>
-import Header from '@/components/Header.vue';
 import ItemList from '@/components/ItemList.vue';
 import SearchField from '@/components/SearchField.vue';
-import ItemView from '@/components/ItemView.vue';
-import { RouterView } from 'vue-router'
+import { useTitle } from '@vueuse/core';
+import { useRouter } from 'vue-router'
 
 let searchValue = $ref('')
 
 function emptySearchValue(){
   searchValue = ''
-  clickedItem = ''
 }
 
-let clickedItem = $ref(null)
+const router = useRouter()
 
-function openItemDetails(item){
-  clickedItem = item
+function openItemDetails(url){
+  console.log(url)
+  const identifier = url.split('/').slice(-2, -1)[0]
+  router.push(`/${identifier}`)
 }
 
 </script>
 
 <template>
-  <Header>Vue 3 Pokémon Finder</Header>
-  
-  <main>
-    <RouterView />
-  </main>
-
-  <!--
-
-  <main>
 
     <section class="flex justify-center items-center p-6 lg:p-8 bg-gray-200 border-b border-gray-300">
       <SearchField class="w-full max-w-md" v-model="searchValue" />
@@ -40,12 +31,5 @@ function openItemDetails(item){
     @clear-search="emptySearchValue" 
     @item-clicked="openItemDetails" />
    </section>
-
-  </main>
-
-  <ItemView v-if="clickedItem" :url="clickedItem.url" @clear-search="emptySearchValue" class="fixed text-center top-2 left-2 right-2 border border-black/40
-  bg-white rounded shadow-lg" />
-
-  -->
 
 </template>
