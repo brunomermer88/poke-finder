@@ -31,7 +31,7 @@ function openItemDetails(url){
       <SearchField class="w-full max-w-md" v-model="searchValue" />
     </section>
 
-    <a @click="actOrder(true)">Ordernar por nome</a> | <a @click="actOrder(false)">Ordernação padão</a>
+    <a class="cursor-pointer" @click="actOrder(true)">Ordernar por nome</a> | <a class="cursor-pointer" @click="actOrder(false)">Ordernação padão</a>
 
    <section class="w-full max-w-screen-xl m-auto p-6 lg:p-8">
     <ItemList :orderby="orderByName" :search="searchValue" 
