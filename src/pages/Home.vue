@@ -5,9 +5,14 @@ import { useTitle } from '@vueuse/core';
 import { useRouter } from 'vue-router'
 
 let searchValue = $ref('')
+let orderByName = $ref(false)
 
 function emptySearchValue(){
   searchValue = ''
+}
+
+function actOrder(tipo = false){
+  orderByName = tipo;
 }
 
 const router = useRouter()
@@ -26,8 +31,10 @@ function openItemDetails(url){
       <SearchField class="w-full max-w-md" v-model="searchValue" />
     </section>
 
+    <a @click="actOrder(true)">Ordernar por nome</a> | <a @click="actOrder(false)">Ordernação padão</a>
+
    <section class="w-full max-w-screen-xl m-auto p-6 lg:p-8">
-    <ItemList :search="searchValue" 
+    <ItemList :orderby="orderByName" :search="searchValue" 
     @clear-search="emptySearchValue" 
     @item-clicked="openItemDetails" />
    </section>

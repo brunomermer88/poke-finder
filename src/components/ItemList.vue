@@ -5,7 +5,7 @@ import { onMounted, watchEffect } from 'vue';
 import { padZeros,removeCharacter,capitalize } from '@/helpers/filters.js';
 import LikeButton from '@/components/LikeButton.vue'
 
-const props = defineProps({ search: String })
+const props = defineProps({ search: String, orderby: Boolean })
 const emit = defineEmits(['clear-search','item-clicked'])
 
 // Starting reactive object to handle the state of the API fetch.
@@ -30,12 +30,16 @@ const items = $computed(() => {
   }))
 });
 
-const filteredItems = $computed(() => {
+const filteredItems1 = $computed(() => {
   return items.filter(
     (item) => 
     item.name.indexOf(props.search.toLowerCase()) > -1 ||
     item.id === Number(props.search)
   )
+})
+
+const filteredItems = $computed(() => {
+  return props.orderby ? filteredItems1.sort((a,b) => a.name.localeCompare(b.name)) : filteredItems1.sort((a,b) => a.id - b.id )
 })
 
 // Computed message with count of items found after a search.
